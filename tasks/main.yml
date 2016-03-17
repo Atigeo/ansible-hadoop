@@ -1,2 +1,66 @@
 ---
 # tasks file for ansible-hadoop
+
+- name: Configure namenode
+  hosts: cluster
+  sudo: yes
+
+  vars:
+    hadoop_version: hadoop-2.6.0-cdh5.4.7
+    hadoop_home: /usr/local/{{ hadoop_version }}
+    namenode_host: namenode
+    namenode_port: 8020
+    hdfs_data_dir: /var/lib/hadoop-hdfs
+
+  tasks:
+    - name: Download hadoop binaries
+      get_url: url=http://archive.cloudera.com/cdh5/cdh/5/{{ hadoop_version }}.tar.gz dest=/tmp/
+
+    - name: Untar archive
+      unarchive: src=/tmp/hadoop-2.6.0-cdh5.4.7.tar.gz dest=/usr/local/ copy=no
+      notify: Restart hadoop
+
+    - name: chown HADOOP_HOME
+      tags: setup
+      file: path={{ hadoop_home}} state=directory owner=pi recurse=yes
+
+    - name: Add HADOOP_HOME
+      tags: setup
+      lineinfile: dest=/etc/environment line="export HADOOP_HOME={{ hadoop_home}}"
+
+    - name: build slaves file
+      tags: setup
+      template: src=templates/hadoop/slaves dest={{ hadoop_home }}/etc/hadoop/
+      when: HOST_NAME == 'namenode'
+      notify: Format Namenode
+
+    - name: Build core-site.xml
+      tags: setup
+      template: src=templates/hadoop/core-site.xml dest={{ hadoop_home }}/etc/hadoop/
+      notify: Format Namenode
+
+    - name: Build hdfs-site.xml
+      tags: setup
+      template: src=templates/hadoop/hdfs-site.xml dest={{ hadoop_home }}/etc/hadoop/
+      notify: Format Namenode
+
+    - name: Create HDFS data dir
+      tags: setup
+      file: path={{ hdfs_data_dir }} state=directory owner=pi recurse=yes
+      notify: Format Namenode
+
+    - name: Add hadoop to path
+      tags: setup
+      alternatives: name=hadoop link=/usr/bin/hadoop path={{ hadoop_home }}/bin/hadoop
+
+
+  handlers:
+    - name: Format Namenode
+      command: sudo -u pi {{ hadoop_home }}/bin/hadoop namenode -format 
+      when: HOST_NAME == 'namenode'
+      notify: Restart HDFS
+
+    - name: Restart HDFS
+      command: sudo -u pi { hadoop_home }}/sbin/start-dfs.sh 
+      when: HOST_NAME == 'namenode'
+
