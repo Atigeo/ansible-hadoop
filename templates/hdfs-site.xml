@@ -20,12 +20,12 @@
 
   <property>
     <name>dfs.replication</name>
-    <value>2</value>
+    <value>{{ dfs_replication }}</value>
   </property>
 
   <property>
     <name>dfs.permissions</name>
-    <value>false</value>
+    <value>{{ hadoop_security }}</value>
   </property>
 
   <property>

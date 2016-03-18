@@ -1,2 +1,16 @@
 ---
 # vars file for ansible-hadoop
+
+install_dir: /opt/atigeo
+hadoop_home: "{{install_dir}}/hadoop"
+hadoop_version: 2.6.0-cdh5.6.0
+hadoop_user: hadoop
+hadoop_group: hadoop
+
+#---- HDFS config ---------------------------------------##
+hdfs_user: hdfs
+dfs_replication: 3
+hdfs_data_dir: /data/hdfs
+namenode_host: "{{ hostvars['hadoop-namenode-1']['ansible_ssh_host'] }}"
+namenode_port: 8020
+hadoop_security: false

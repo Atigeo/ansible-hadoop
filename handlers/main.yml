@@ -1,2 +1,11 @@
 ---
 # handlers file for ansible-hadoop
+
+- name: Format Namenode
+  command: su -p {{ hdfs_user }} -c  "{{ hadoop_home }}/bin/hadoop namenode -format"
+  when: inventory_hostname == 'hadoop-namenode-1'
+  notify: Restart HDFS
+
+- name: Restart HDFS
+  command: su -p {{ hdfs_user }} -c "{{ hadoop_home }}/sbin/start-dfs.sh"
+  when: inventory_hostname == 'hadoop-namenode-1'
